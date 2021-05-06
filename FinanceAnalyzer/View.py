@@ -2,27 +2,103 @@ import tkinter as tk
 import re
 
 
-class StickyFrame(tk.Frame):
-    sep_geom = "", r"\.", r"\+", ":", r"\.", r"\+"
-    re_geom = re.compile("".join((f"(?:{f}([0-9]*))?" for f in sep_geom)) + "(?:/([NEWSnews]+))?")
+class WindowAccounting(tk.Frame):
+    def __init__(self, master, callback):
+        super().__init__(master)
+        self.num_columns = 4
+        self.callback = callback
+        self.canvas = View.fc(tk.Canvas, self, "0:0", True)
+        self.scrollbar = View.fc(tk.Scrollbar, self, "0:1.0", True, orient="vertical",
+                                 command=self.canvas.yview)
+        self.main_scrollable_frame, unused = View.fc(tk.Frame, self.canvas, "0:0")
+        self.main_scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(
+            scrollregion=self.canvas.bbox("all")))
+        self.canvas.create_window((0, 0), window=self.main_scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.comment = View.fc(tk.Label, self.main_scrollable_frame, "0:0", True, text="Comment")
+        self.category = View.fc(tk.Label, self.main_scrollable_frame, "0:1", True, text="Category")
+        self.value = View.fc(tk.Label, self.main_scrollable_frame, "0:2", True,
+                             text="Income/Expenses")
+        self.data = View.fc(tk.Label, self.main_scrollable_frame, "0:3", True, text="Date")
+        self.entries = {}
 
+    def __call__(self, data):
+        for entry in data:
+            row, col = entry["row"], entry["col"]
+            self.entries[row, col] = View.fc(tk.Entry, self.main_scrollable_frame,
+                                             f"{row + 1}:{col}", True)
+            self.entries[row, col].insert(0, entry["data"])
+
+
+class WindowGoals(tk.Frame):
+    def __init__(self, master, callback):
+        super().__init__(master)
+
+    def __call__(self, data):
+        pass
+
+
+class WindowReport(tk.Frame):
+    def __init__(self, master, callback):
+        super().__init__(master)
+
+    def __call__(self, data):
+        pass
+
+
+class WindowSettings(tk.Frame):
     def __init__(self, master, callback):
         super().__init__(master)
         self.callback = callback
-        self.grid(sticky="NEWS")
-        self.main_frame, self.main_geom = self._(tk.Frame, self, "0:0.10")
-        self.buttons_frame, self.buttons_geom = self._(tk.Frame, self, "0:1.1")
-        self.accounting, self.accounting_geom = self._(tk.Button, self.buttons_frame, "0:0",
-                                                       text="Accounting")
-        self.goals, self.goals_geom = self._(tk.Button, self.buttons_frame, "1:0", text="Goals")
-        self.report, self.report_geom = self._(tk.Button, self.buttons_frame, "2:0", text="Report")
-        self.settings, self.settings_geom = self._(tk.Button, self.buttons_frame, "3:0",
-                                                   text="Settings")
-        self.active_objects = []
+        self.entries = {}
 
-    def _(self, cls, master, geom=":", draw=False, *args, **kwargs):
+    def __call__(self, data):
+        for entry in data:
+            row, col, data = entry["row"], entry["col"], entry["data"]
+            if col == 0:
+                self.entries[row, col] = View.fc(tk.Label, self, f"{row + 1}.0:{col}", True,
+                                                 text=data)
+            else:
+                self.entries[row, col] = View.fc(tk.Entry, self, f"{row + 1}.0:{col}", True)
+                self.entries[row, col].insert(0, data)
+
+
+class View:
+    sep_geom = "", r"\.", r"\+", ":", r"\.", r"\+"
+    re_geom = re.compile("".join((f"(?:{f}([0-9]*))?" for f in sep_geom)) + "(?:/([NEWSnews]+))?")
+    active_objects = []
+
+    def __init__(self, master, callback):
+        self.callback = callback
+        self.main_frame = self.fc(tk.Frame, master, "0:0.10", True)
+        self.buttons_frame = self.fc(tk.Frame, master, "0:1.1", True)
+        self.accounting = self.fc(tk.Button, self.buttons_frame, "0:0", True, text="Accounting",
+                                  command=lambda: self.callback({"type": "accounting_navigation",
+                                                                 "data": None}))
+        self.goals = self.fc(tk.Button, self.buttons_frame, "1:0", True, text="Goals")
+        self.report = self.fc(tk.Button, self.buttons_frame, "2:0", True, text="Report")
+        self.settings = self.fc(tk.Button, self.buttons_frame, "3:0", True, text="Settings",
+                                command=lambda: self.callback({"type": "settings_navigation",
+                                                               "data": None}))
+        self.main_frame.rowconfigure(0, weight=1)
+        self.main_frame.columnconfigure(0, weight=1)
+        self.window_accounting = WindowAccounting(self.main_frame, callback)
+        self.window_goals = WindowGoals(self.main_frame, callback)
+        self.window_report = WindowReport(self.main_frame, callback)
+        self.window_settings = WindowSettings(self.main_frame, callback)
+
+    def __call__(self, window, data):
+        self.window_accounting.grid_remove()
+        self.window_goals.grid_remove()
+        self.window_report.grid_remove()
+        self.window_settings.grid_remove()
+        getattr(self, window).grid(sticky="NEWS")
+        getattr(self, window)(data)
+
+    @staticmethod
+    def fc(cls, master, geom=":", draw=False, *args, **kwargs):
         ret = cls(master, *args, **kwargs)
-        groups = self.re_geom.match(geom or ":").groups()
+        groups = View.re_geom.match(geom or ":").groups()
         default = 0, 1, 0, master.grid_size()[0], 1, 0, "NEWS"
         y, wy, dy, x, wx, dx, s = (b if a in ('', None) else a for a, b in zip(groups, default))
         geom = {"column": x, "columnspan": int(dx) + 1, "row": y, "rowspan": int(dy) + 1,
@@ -34,82 +110,3 @@ class StickyFrame(tk.Frame):
             return ret
         else:
             return ret, geom
-
-    def __call__(self, *args):
-        for obj in self.active_objects:
-            obj.grid_remove()
-        self.main_frame.grid(**self.main_geom)
-        self.buttons_frame.grid(**self.buttons_geom)
-        self.accounting.grid(**self.accounting_geom)
-        self.goals.grid(**self.goals_geom)
-        self.report.grid(**self.report_geom)
-        self.settings.grid(**self.settings_geom)
-
-
-class WindowAccounting(StickyFrame):
-    def __init__(self, master, callback):
-        super().__init__(master, callback)
-        self.num_columns = 4
-        self.canvas, self.canvas_geom = self._(tk.Canvas, self.main_frame, "0:0")
-        self.scrollbar, self.scrollbar_geom = self._(tk.Scrollbar, self.main_frame, "0:1.0",
-                                                     orient="vertical", command=self.canvas.yview)
-        self.main_scrollable_frame, self.main_scrollable_geom = self._(tk.Frame, self.canvas,
-                                                                       "0:0")
-        self.main_scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(
-            scrollregion=self.canvas.bbox("all")))
-        self.canvas.create_window((0, 0), window=self.main_scrollable_frame, anchor="nw")
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-    def __call__(self, data):
-        super().__call__(data)
-        self.canvas.grid(**self.canvas_geom)
-        self.scrollbar.grid(**self.scrollbar_geom)
-        self.active_objects += [self.canvas, self.scrollbar, self.main_scrollable_frame]
-        self.active_objects.append(self._(tk.Label, self.main_scrollable_frame, "0:0", True,
-                                          text="Comment"))
-        self.active_objects.append(self._(tk.Label, self.main_scrollable_frame, "0:1", True,
-                                          text="Category"))
-        self.active_objects.append(self._(tk.Label, self.main_scrollable_frame, "0:2", True,
-                                          text="Income/Expenses"))
-        self.active_objects.append(self._(tk.Label, self.main_scrollable_frame, "0:3", True,
-                                          text="Date"))
-        for row, row_data in enumerate(data):
-            for col in range(self.num_columns):
-                self.active_objects.append(self._(tk.Text, self.main_scrollable_frame,
-                                                  f"{row + 1}:{col}", True, width=20, height=1))
-                self.active_objects[-1].insert(1.0, row_data[col])
-
-
-class WindowGoals(StickyFrame):
-    def __init__(self, master, callback):
-        super().__init__(master, callback)
-
-    def __call__(self, data):
-        pass
-
-
-class WindowReport(StickyFrame):
-    def __init__(self, master, callback):
-        super().__init__(master, callback)
-
-    def __call__(self, data):
-        pass
-
-
-class WindowSettings(StickyFrame):
-    def __init__(self, master, callback):
-        super().__init__(master, callback)
-
-    def __call__(self, data):
-        pass
-
-
-class View:
-    def __init__(self, master, callback):
-        self.window_accounting = WindowAccounting(master, callback)
-        self.window_goals = WindowGoals(master, callback)
-        self.window_report = WindowReport(master, callback)
-        self.window_setting = WindowSettings(master, callback)
-
-    def __call__(self, window, data):
-        getattr(self, window)(data)

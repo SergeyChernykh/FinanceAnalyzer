@@ -14,15 +14,17 @@ class Controller:
         self.main_window.grid(sticky="NEWS")
         self.view = View.View(self.main_window, self.pass_event_to_model)
         self.model = Model.Model(self.draw_view)
+        self.window = None
 
     def __call__(self):
         self.pass_event_to_model()
         self.main_window.master.mainloop()
 
-    def pass_event_to_model(self, window=None, event=None):
-        self.model(window, event)
+    def pass_event_to_model(self, event=None):
+        self.model(self.window, event)
 
     def draw_view(self, window, data):
+        self.window = window
         self.view(window, data)
 
 
