@@ -15,4 +15,4 @@ class Model:
 
     @staticmethod
     def process_event(window, event):
-        return window, None
+        return window, [[str(i * 4 + j) for j in range(4)] for i in range(20)]
