@@ -39,10 +39,9 @@ class Model:
             except sqlite3.OperationalError:
                 self.cur.execute("CREATE TABLE ACCOUNTING"
                                  "(comment text, category text, value real, date text)")
-                for i in range(self.num_records_start):
-                    self.cur.executemany("INSERT INTO ACCOUNTING VALUES (?, ?, ?, ?)",
-                                         [("", "", 0.0, "")
-                                          for _ in range(self.num_records_start)])
+                self.cur.executemany("INSERT INTO ACCOUNTING VALUES (?, ?, ?, ?)",
+                                     [("", "", 0.0, "")
+                                      for _ in range(self.num_records_start)])
                 return window, ({"row": i // 4, "col": i % 4, "data": ""} for i in range(
                     self.num_records_start * 4))
         else:

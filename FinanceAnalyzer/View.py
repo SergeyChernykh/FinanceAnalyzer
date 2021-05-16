@@ -66,7 +66,6 @@ class WindowSettings(tk.Frame):
 class View:
     sep_geom = "", r"\.", r"\+", ":", r"\.", r"\+"
     re_geom = re.compile("".join((f"(?:{f}([0-9]*))?" for f in sep_geom)) + "(?:/([NEWSnews]+))?")
-    active_objects = []
 
     def __init__(self, master, callback):
         self.callback = callback
