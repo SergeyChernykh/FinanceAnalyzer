@@ -28,6 +28,16 @@ class WindowAccounting(tk.Frame):
             self.entries[row, col] = View.fc(tk.Entry, self.main_scrollable_frame,
                                              f"{row + 1}:{col}", True)
             self.entries[row, col].insert(0, entry["data"])
+            self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
+
+    def update_row(self, row):
+        self.callback({"type": "accounting_update_row",
+                       "id": row,
+                       "comment": self.entries[row, 0].get(),
+                       "category": self.entries[row, 1].get(),
+                       "value": self.entries[row, 2].get(),
+                       "date": self.entries[row, 3].get()
+                       })
 
 
 class WindowGoals(tk.Frame):

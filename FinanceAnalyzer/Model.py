@@ -26,34 +26,59 @@ class Model:
     def validate_args(window, event):
         return True
 
+    @property
     def accounting_navigation(self):
         window = "window_accounting"
         if self.initial_call[window]:
             self.initial_call[window] = False
             try:
-                res = self.cur.execute("SELECT * FROM ACCOUNTING")
-                result = [{"row": row, "col": col, "data": val if val else ""}
-                          for row, record in enumerate(res)
-                          for col, val in enumerate(record)]
+                res = self.cur.execute("SELECT * FROM ACCOUNTING ORDER BY id")
+                result = []
+                for row, record in enumerate(res):
+                    for col, val in enumerate(record):
+                        if col != 0:
+                            result.append({"row": row, "col": col - 1, "data": val if val else ""})
                 return window, result
             except sqlite3.OperationalError:
                 self.cur.execute("CREATE TABLE ACCOUNTING"
-                                 "(comment text, category text, value real, date text)")
-                self.cur.executemany("INSERT INTO ACCOUNTING VALUES (?, ?, ?, ?)",
-                                     [("", "", 0.0, "")
-                                      for _ in range(self.num_records_start)])
+                                 "(id integer,"
+                                 "comment text,"
+                                 "category text,"
+                                 "value real,"
+                                 "date text)")
+                self.cur.executemany("INSERT INTO ACCOUNTING VALUES (?, ?, ?, ?, ?)",
+                                     [(i, "", "", 0.0, "")
+                                      for i in range(self.num_records_start)])
                 return window, ({"row": i // 4, "col": i % 4, "data": ""} for i in range(
                     self.num_records_start * 4))
         else:
             return window, []
 
+    def accounting_row_update(self, event):
+        upd = ""
+        for column in ["comment", "category", "value", "date"]:
+            upd += column + " = '" + event[column] + "',"
+        self.cur.execute("update ACCOUNTING SET " + upd[:-1] + " WHERE id = " + str(event["id"]))
+        if event["id"] % 20 == 19:
+            self.cur.executemany("INSERT INTO ACCOUNTING VALUES (?, ?, ?, ?, ?)",
+                                 [(event["id"] + 1 + i, "", "", 0.0, "")
+                                  for i in range(self.num_records_start)])
+            res = self.cur.execute("SELECT * FROM ACCOUNTING ORDER BY id")
+            result = [{"row": row, "col": col - 1, "data": val if val else ""}
+                      for row, record in enumerate(res)
+                      for col, val in enumerate(record) if col != 0]
+            return result
+        return []
+
     def process_event(self, window, event):
         event_type = event["type"]
         if event_type == "accounting_navigation":
-            return self.accounting_navigation()
+            return self.accounting_navigation
         elif event_type == "settings_navigation":
             window = "window_settings"
             if self.initial_call[window]:
                 return window, [{"row": i // 2, "col": i % 2, "data": f"{i}"} for i in range(40)]
             else:
                 return window, []
+        elif event_type == "accounting_update_row":
+            return window, self.accounting_row_update(event)
