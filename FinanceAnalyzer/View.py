@@ -22,11 +22,11 @@ class WindowAccounting(tk.Frame):
         self.data = View.fc(tk.Label, self.main_scrollable_frame, "0:3", True, text="Date")
         self.entries = {}
 
-    def __call__(self, data):
+    def __call__(self, data, theme_info):
         for entry in data:
             row, col = entry["row"], entry["col"]
             self.entries[row, col] = View.fc(tk.Entry, self.main_scrollable_frame,
-                                             f"{row + 1}:{col}", True)
+                                             f"{row + 1}:{col}", True, **theme_info)
             self.entries[row, col].insert(0, entry["data"])
             self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
@@ -44,7 +44,7 @@ class WindowGoals(tk.Frame):
     def __init__(self, master, callback):
         super().__init__(master)
 
-    def __call__(self, data):
+    def __call__(self, data, theme_info):
         pass
 
 
@@ -52,7 +52,7 @@ class WindowReport(tk.Frame):
     def __init__(self, master, callback):
         super().__init__(master)
 
-    def __call__(self, data):
+    def __call__(self, data, theme_info):
         pass
 
 
@@ -62,15 +62,23 @@ class WindowSettings(tk.Frame):
         self.callback = callback
         self.entries = {}
 
-    def __call__(self, data):
+    def __call__(self, data, theme_info):
         for entry in data:
             row, col, data = entry["row"], entry["col"], entry["data"]
             if col == 0:
                 self.entries[row, col] = View.fc(tk.Label, self, f"{row + 1}.0:{col}", True,
-                                                 text=data)
+                                                 text=data, **theme_info)
             else:
-                self.entries[row, col] = View.fc(tk.Entry, self, f"{row + 1}.0:{col}", True)
+                self.entries[row, col] = View.fc(tk.Entry, self, f"{row + 1}.0:{col}", True,
+                                                 **theme_info)
                 self.entries[row, col].insert(0, data)
+                self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
+
+    def update_row(self, row):
+        self.callback({"type": "settings_update_row",
+                       "name": self.entries[row, 0].cget("text"),
+                       "value": self.entries[row, 1].get(),
+                       })
 
 
 class View:
@@ -96,13 +104,40 @@ class View:
         self.window_report = WindowReport(self.main_frame, callback)
         self.window_settings = WindowSettings(self.main_frame, callback)
 
+    def setup_theme(self, theme_info):
+        self.theme_info = theme_info
+        self.window_accounting.configure(background=theme_info["background"])
+        self.window_goals.configure(background=theme_info["background"])
+        self.window_report.configure(background=theme_info["background"])
+        self.window_settings.configure(background=theme_info["background"])
+
+        self.accounting.configure(**theme_info)
+        self.goals.configure(**theme_info)
+        self.report.configure(**theme_info)
+        self.settings.configure(**theme_info)
+
+        self.window_accounting.comment.configure(**theme_info)
+        self.window_accounting.category.configure(**theme_info)
+        self.window_accounting.value.configure(**theme_info)
+        self.window_accounting.data.configure(**theme_info)
+        for entry in self.window_accounting.entries.values():
+            entry.configure(**theme_info)
+
+        for entry in self.window_settings.entries.values():
+            entry.configure(**theme_info)
+
+        self.callback({"type": "theme_setup", "data": None})
+
     def __call__(self, window, data):
         self.window_accounting.grid_remove()
         self.window_goals.grid_remove()
         self.window_report.grid_remove()
         self.window_settings.grid_remove()
-        getattr(self, window).grid(sticky="NEWS")
-        getattr(self, window)(data)
+        if window == "window_main":
+            self.setup_theme(data)
+        else:
+            getattr(self, window).grid(sticky="NEWS")
+            getattr(self, window)(data, self.theme_info)
 
     @staticmethod
     def fc(cls, master, geom=":", draw=False, *args, **kwargs):
