@@ -1,9 +1,17 @@
+"""MVC View part of application."""
 import tkinter as tk
 import re
 
 
 class WindowAccounting(tk.Frame):
+    """WindowAccounting frame."""
+
     def __init__(self, master, callback):
+        """Create nested frames.
+
+        :param master: master frame.
+        :param callback: callback passed by Controller.
+        """
         super().__init__(master)
         self.num_columns = 4
         self.callback = callback
@@ -23,6 +31,11 @@ class WindowAccounting(tk.Frame):
         self.entries = {}
 
     def __call__(self, data, theme_info):
+        """Draw passed entries.
+
+        :param data: entries data.
+        :param theme_info: theme settings.
+        """
         for entry in data:
             row, col = entry["row"], entry["col"]
             self.entries[row, col] = View.fc(tk.Entry, self.main_scrollable_frame,
@@ -31,6 +44,10 @@ class WindowAccounting(tk.Frame):
             self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
     def update_row(self, row):
+        """Pass edited data to Controller.
+
+        :param row: row number.
+        """
         self.callback({"type": "accounting_update_row",
                        "id": row,
                        "comment": self.entries[row, 0].get(),
@@ -41,28 +58,64 @@ class WindowAccounting(tk.Frame):
 
 
 class WindowGoals(tk.Frame):
+    """WindowGoals frame."""
+
     def __init__(self, master, callback):
+        """Create nested frames.
+
+        :param master: master frame.
+        :param callback: callback passed by Controller.
+        """
         super().__init__(master)
 
     def __call__(self, data, theme_info):
+        """Draw passed data.
+
+        :param data: entries data.
+        :param theme_info: theme settings.
+        """
         pass
 
 
 class WindowReport(tk.Frame):
+    """WindowReport frame."""
+
     def __init__(self, master, callback):
+        """Create nested frames.
+
+        :param master: master frame.
+        :param callback: callback passed by Controller.
+        """
         super().__init__(master)
 
     def __call__(self, data, theme_info):
+        """Draw passed data.
+
+        :param data: entries data.
+        :param theme_info: theme settings.
+        """
         pass
 
 
 class WindowSettings(tk.Frame):
+    """WindowSettings frame."""
+
     def __init__(self, master, callback):
+        """Create nested frames.
+
+        :param master: master frame.
+        :param callback: callback passed by Controller.
+        """
         super().__init__(master)
         self.callback = callback
         self.entries = {}
 
     def __call__(self, data, theme_info):
+        """Draw passed entries.
+
+        :param data: entries data.
+        :param theme_info: theme settings.
+        """
         for entry in data:
             row, col, data = entry["row"], entry["col"], entry["data"]
             if col == 0:
@@ -75,6 +128,10 @@ class WindowSettings(tk.Frame):
                 self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
     def update_row(self, row):
+        """Pass edited data to Controller.
+
+        :param row: row number.
+        """
         self.callback({"type": "settings_update_row",
                        "name": self.entries[row, 0].cget("text"),
                        "value": self.entries[row, 1].get(),
@@ -82,10 +139,17 @@ class WindowSettings(tk.Frame):
 
 
 class View:
+    """MVC View class."""
+
     sep_geom = "", r"\.", r"\+", ":", r"\.", r"\+"
     re_geom = re.compile("".join((f"(?:{f}([0-9]*))?" for f in sep_geom)) + "(?:/([NEWSnews]+))?")
 
     def __init__(self, master, callback):
+        """Create nested frames.
+
+        :param master: master frame.
+        :param callback: callback passed by Controller.
+        """
         self.callback = callback
         self.main_frame = self.fc(tk.Frame, master, "0:0.10", True)
         self.buttons_frame = self.fc(tk.Frame, master, "0:1.1", True)
@@ -105,6 +169,10 @@ class View:
         self.window_settings = WindowSettings(self.main_frame, callback)
 
     def setup_theme(self, theme_info):
+        """Change theme in all nested frames and store settings.
+
+        :param theme_info: theme settings.
+        """
         self.theme_info = theme_info
         self.window_accounting.configure(background=theme_info["background"])
         self.window_goals.configure(background=theme_info["background"])
@@ -129,6 +197,11 @@ class View:
         self.callback({"type": "theme_setup", "data": None})
 
     def __call__(self, window, data):
+        """Pass data to draw in appropriate window.
+
+        :param window: window to draw.
+        :param data: data to draw.
+        """
         self.window_accounting.grid_remove()
         self.window_goals.grid_remove()
         self.window_report.grid_remove()
@@ -141,6 +214,17 @@ class View:
 
     @staticmethod
     def fc(cls, master, geom=":", draw=False, *args, **kwargs):
+        """Create a widget, set up geometry and adjust master's column/row weights.
+
+        Geometry string may (not) include any of the following fields:
+        row+span.weight:row+column.weight/gravity
+        :param cls: widget class
+        :param master: master widget to embed
+        :param geom: geometry string
+        :param draw: need to draw
+        :param args: positional arguments tuple for cls() call
+        :param kwargs: named arguments tuple for cls() call
+        """
         ret = cls(master, *args, **kwargs)
         groups = View.re_geom.match(geom or ":").groups()
         default = 0, 1, 0, master.grid_size()[0], 1, 0, "NEWS"
