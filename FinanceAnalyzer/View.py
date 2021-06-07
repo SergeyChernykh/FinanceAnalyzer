@@ -1,7 +1,12 @@
 """MVC View part of application."""
-import tkinter as tk
+import os
 import re
+import gettext
+import tkinter as tk
 from typing import Optional, Dict, Union, Callable, Iterable, Tuple
+
+
+gettext.install("FinanceAnalyzer", os.path.dirname(__file__), names=("ngettext", ))
 
 
 class WindowAccounting(tk.Frame):
@@ -26,11 +31,13 @@ class WindowAccounting(tk.Frame):
             scrollregion=self.canvas.bbox("all")))
         self.canvas.create_window((0, 0), window=self.main_scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.comment = View.fc(tk.Label, self.main_scrollable_frame, "0:0", True, text="Comment")
-        self.category = View.fc(tk.Label, self.main_scrollable_frame, "0:1", True, text="Category")
+        self.comment = View.fc(tk.Label, self.main_scrollable_frame, "0:0", True,
+                               text=_("Comment"))
+        self.category = View.fc(tk.Label, self.main_scrollable_frame, "0:1", True,
+                                text=_("Category"))
         self.value = View.fc(tk.Label, self.main_scrollable_frame, "0:2", True,
-                             text="Income/Expenses")
-        self.data = View.fc(tk.Label, self.main_scrollable_frame, "0:3", True, text="Date")
+                             text=_("Income/Expenses"))
+        self.data = View.fc(tk.Label, self.main_scrollable_frame, "0:3", True, text=_("Date"))
         self.entries = {}
 
     def __call__(self, data: Iterable[Dict[str, Union[int, str, float]]],
@@ -130,14 +137,14 @@ class WindowSettings(tk.Frame):
         :param theme_info: theme settings.
         """
         for entry in data:
-            row, col, data = entry["row"], entry["col"], entry["data"]
+            row, col, entry_data = entry["row"], entry["col"], entry["data"]
             if col == 0:
                 self.entries[row, col] = View.fc(tk.Label, self, f"{row + 1}.0:{col}", True,
-                                                 text=data, **theme_info)
+                                                 text=entry_data, **theme_info)
             else:
                 self.entries[row, col] = View.fc(tk.Entry, self, f"{row + 1}.0:{col}", True,
                                                  **theme_info)
-                self.entries[row, col].insert(0, data)
+                self.entries[row, col].insert(0, entry_data)
                 self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
     def update_row(self, row: int) -> None:
@@ -168,12 +175,12 @@ class View:
         self.callback = callback
         self.main_frame = self.fc(tk.Frame, master, "0:0.10", True)
         self.buttons_frame = self.fc(tk.Frame, master, "0:1.1", True)
-        self.accounting = self.fc(tk.Button, self.buttons_frame, "0:0", True, text="Accounting",
+        self.accounting = self.fc(tk.Button, self.buttons_frame, "0:0", True, text=_("Accounting"),
                                   command=lambda: self.callback({"type": "accounting_navigation",
                                                                  "data": None}))
-        self.goals = self.fc(tk.Button, self.buttons_frame, "1:0", True, text="Goals")
-        self.report = self.fc(tk.Button, self.buttons_frame, "2:0", True, text="Report")
-        self.settings = self.fc(tk.Button, self.buttons_frame, "3:0", True, text="Settings",
+        self.goals = self.fc(tk.Button, self.buttons_frame, "1:0", True, text=_("Goals"))
+        self.report = self.fc(tk.Button, self.buttons_frame, "2:0", True, text=_("Report"))
+        self.settings = self.fc(tk.Button, self.buttons_frame, "3:0", True, text=_("Settings"),
                                 command=lambda: self.callback({"type": "settings_navigation",
                                                                "data": None}))
         self.main_frame.rowconfigure(0, weight=1)

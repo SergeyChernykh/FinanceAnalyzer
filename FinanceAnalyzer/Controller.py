@@ -27,7 +27,7 @@ class Controller:
 
     def __call__(self) -> None:
         """Initialize communications between Model and View."""
-        self.pass_event_to_model(self.main_window, {"type": "start_setup", "data": None})
+        self.pass_event_to_model({"type": "start_setup", "data": None})
         self.main_window.master.mainloop()
 
     def pass_event_to_model(self, event: Dict[str, Optional[Union[str, int]]] = None) -> None:

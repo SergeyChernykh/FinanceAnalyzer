@@ -3,3 +3,4 @@ ignore = E741
 exclude = .git, __pycache__
 max-line-length = 99
 indent-size = 4
+builtins = _, ngettext
