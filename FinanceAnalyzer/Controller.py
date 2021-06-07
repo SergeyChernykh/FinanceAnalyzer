@@ -1,12 +1,13 @@
 """MVC Controller part of application."""
 import tkinter as tk
 from . import View, Model
+from typing import Optional, Dict, Union, Iterable
 
 
 class Controller:
     """MVC Controller class."""
 
-    def __init__(self, title="FinanceAnalyzer"):
+    def __init__(self, title: str = "FinanceAnalyzer") -> None:
         """Create View and Model instances.
 
         Model and View communicate via callbacks.
@@ -22,18 +23,20 @@ class Controller:
         self.main_window.grid(sticky="NEWS")
         self.view = View.View(self.main_window, self.pass_event_to_model)
         self.model = Model.Model(self.draw_view)
-        self.window = None
+        self.window = "window_main"
 
-    def __call__(self):
+    def __call__(self) -> None:
         """Initialize communications between Model and View."""
-        self.pass_event_to_model()
+        self.pass_event_to_model(self.main_window, {"type": "start_setup", "data": None})
         self.main_window.master.mainloop()
 
-    def pass_event_to_model(self, event=None):
+    def pass_event_to_model(self, event: Dict[str, Optional[Union[str, int]]] = None) -> None:
         """Pass data to Model."""
         self.model(self.window, event)
 
-    def draw_view(self, window, data):
+    def draw_view(self, window: str,
+                  data: Optional[Union[Iterable[Dict[str, Union[int, str, float]]],
+                                       Dict[str, str]]]) -> None:
         """Pass data to View."""
         self.window = window
         self.view(window, data)

@@ -1,12 +1,15 @@
 """MVC View part of application."""
 import tkinter as tk
 import re
+from typing import Optional, Dict, Union, Callable, Iterable, Tuple
 
 
 class WindowAccounting(tk.Frame):
     """WindowAccounting frame."""
 
-    def __init__(self, master, callback):
+    def __init__(self, master: Optional[tk.Frame],
+                 callback: Callable[[Dict[str, Optional[Union[str, int]]]], None]
+                 ) -> None:
         """Create nested frames.
 
         :param master: master frame.
@@ -30,7 +33,8 @@ class WindowAccounting(tk.Frame):
         self.data = View.fc(tk.Label, self.main_scrollable_frame, "0:3", True, text="Date")
         self.entries = {}
 
-    def __call__(self, data, theme_info):
+    def __call__(self, data: Iterable[Dict[str, Union[int, str, float]]],
+                 theme_info: Dict[str, str]) -> None:
         """Draw passed entries.
 
         :param data: entries data.
@@ -43,7 +47,7 @@ class WindowAccounting(tk.Frame):
             self.entries[row, col].insert(0, entry["data"])
             self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
-    def update_row(self, row):
+    def update_row(self, row: int) -> None:
         """Pass edited data to Controller.
 
         :param row: row number.
@@ -60,7 +64,9 @@ class WindowAccounting(tk.Frame):
 class WindowGoals(tk.Frame):
     """WindowGoals frame."""
 
-    def __init__(self, master, callback):
+    def __init__(self, master: Optional[tk.Frame],
+                 callback: Callable[[Dict[str, Optional[Union[str, int]]]], None]
+                 ) -> None:
         """Create nested frames.
 
         :param master: master frame.
@@ -68,7 +74,8 @@ class WindowGoals(tk.Frame):
         """
         super().__init__(master)
 
-    def __call__(self, data, theme_info):
+    def __call__(self, data: Iterable[Dict[str, Union[int, str, float]]],
+                 theme_info: Dict[str, str]) -> None:
         """Draw passed data.
 
         :param data: entries data.
@@ -80,7 +87,9 @@ class WindowGoals(tk.Frame):
 class WindowReport(tk.Frame):
     """WindowReport frame."""
 
-    def __init__(self, master, callback):
+    def __init__(self, master: Optional[tk.Frame],
+                 callback: Callable[[Dict[str, Optional[Union[str, int]]]], None]
+                 ) -> None:
         """Create nested frames.
 
         :param master: master frame.
@@ -88,7 +97,8 @@ class WindowReport(tk.Frame):
         """
         super().__init__(master)
 
-    def __call__(self, data, theme_info):
+    def __call__(self, data: Iterable[Dict[str, Union[int, str, float]]],
+                 theme_info: Dict[str, str]) -> None:
         """Draw passed data.
 
         :param data: entries data.
@@ -100,7 +110,9 @@ class WindowReport(tk.Frame):
 class WindowSettings(tk.Frame):
     """WindowSettings frame."""
 
-    def __init__(self, master, callback):
+    def __init__(self, master: Optional[tk.Frame],
+                 callback: Callable[[Dict[str, Optional[Union[str, int]]]], None]
+                 ) -> None:
         """Create nested frames.
 
         :param master: master frame.
@@ -110,7 +122,8 @@ class WindowSettings(tk.Frame):
         self.callback = callback
         self.entries = {}
 
-    def __call__(self, data, theme_info):
+    def __call__(self, data: Iterable[Dict[str, Union[int, str, float]]],
+                 theme_info: Dict[str, str]) -> None:
         """Draw passed entries.
 
         :param data: entries data.
@@ -127,7 +140,7 @@ class WindowSettings(tk.Frame):
                 self.entries[row, col].insert(0, data)
                 self.entries[row, col].bind('<Return>', lambda _, row=row: self.update_row(row))
 
-    def update_row(self, row):
+    def update_row(self, row: int) -> None:
         """Pass edited data to Controller.
 
         :param row: row number.
@@ -144,7 +157,9 @@ class View:
     sep_geom = "", r"\.", r"\+", ":", r"\.", r"\+"
     re_geom = re.compile("".join((f"(?:{f}([0-9]*))?" for f in sep_geom)) + "(?:/([NEWSnews]+))?")
 
-    def __init__(self, master, callback):
+    def __init__(self, master: Optional[tk.Frame],
+                 callback: Callable[[Dict[str, Optional[Union[str, int]]]], None]
+                 ) -> None:
         """Create nested frames.
 
         :param master: master frame.
@@ -168,7 +183,7 @@ class View:
         self.window_report = WindowReport(self.main_frame, callback)
         self.window_settings = WindowSettings(self.main_frame, callback)
 
-    def setup_theme(self, theme_info):
+    def setup_theme(self, theme_info: Dict[str, str]) -> None:
         """Change theme in all nested frames and store settings.
 
         :param theme_info: theme settings.
@@ -196,7 +211,9 @@ class View:
 
         self.callback({"type": "theme_setup", "data": None})
 
-    def __call__(self, window, data):
+    def __call__(self, window: str,
+                 data: Optional[Union[Iterable[Dict[str, Union[int, str, float]]],
+                                      Dict[str, str]]]) -> None:
         """Pass data to draw in appropriate window.
 
         :param window: window to draw.
@@ -213,7 +230,9 @@ class View:
             getattr(self, window)(data, self.theme_info)
 
     @staticmethod
-    def fc(cls, master, geom=":", draw=False, *args, **kwargs):
+    def fc(cls: type, master: tk.Frame, geom: str = ":", draw: bool = False,
+           *args,
+           **kwargs) -> Union[tk.Frame, Tuple[tk.Frame, Dict[str, int]]]:
         """Create a widget, set up geometry and adjust master's column/row weights.
 
         Geometry string may (not) include any of the following fields:

@@ -1,12 +1,14 @@
 """MVC Model part of application."""
 import os
 import sqlite3
+from typing import Optional, Dict, Union, Callable, Iterable, Tuple
 
 
 class Model:
     """MVC Model class."""
 
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[str, Optional[
+            Union[Iterable[Dict[str, Union[int, str, float]]], Dict[str, str]]]], None]) -> None:
         """Open database.
 
         :param callback: callback passed by Controller.
@@ -19,25 +21,23 @@ class Model:
         self.cur = self.con.cursor()
         self.num_records_start = 20
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Commit changes and close database."""
         self.con.commit()
         self.con.close()
 
-    def __call__(self, window, event):
+    def __call__(self, window: str, event: Dict[str, Optional[Union[str, int]]]) -> None:
         """Process event and pass data to Controller.
 
         :param window: the window in which the event occurred.
         :param event: occurred event data.
         """
-        window = window if window is not None else "window_main"
-        event = event if event is not None else {"type": "start_setup", "data": None}
         assert self.validate_args(window, event)
         window, data = self.process_event(event)
         self.callback(window, data)
 
     @staticmethod
-    def validate_args(window, event):
+    def validate_args(window: str, event: Dict[str, Optional[Union[str, int]]]) -> bool:
         """Validate data passed from Controller.
 
         :param window: the window in which the event occurred.
@@ -45,7 +45,8 @@ class Model:
         """
         return True
 
-    def start_setup(self, event):
+    def start_setup(self, event: Dict[str, Optional[Union[str, int]]]
+                    ) -> Tuple[str, Dict[str, str]]:
         """Check if database empty. Crete tables if needed.
 
         :param event: occurred event data.
@@ -58,14 +59,14 @@ class Model:
             self.create_tables()
         return window, self.prepare_theme_data()
 
-    def prepare_theme_data(self):
+    def prepare_theme_data(self) -> Dict[str, str]:
         """Get theme settings from database."""
         res = self.cur.execute("SELECT * FROM SETTINGS ORDER BY name")
         tmpres = {record[0]: record[1] for record in res if record[0] in self.settings_set}
         fullname2tk = {"Background color": "background", "Text color": "fg", "Font": "font"}
         return {fullname2tk[k]: v for k, v in tmpres.items()}
 
-    def create_tables(self):
+    def create_tables(self) -> None:
         """Create Accounting and Settings tables."""
         self.cur.execute("CREATE TABLE ACCOUNTING"
                          "(id integer,"
@@ -82,7 +83,8 @@ class Model:
                              [("Background color", "white"), ("Text color", "black"),
                               ("Font", "Arial")])
 
-    def accounting_navigation(self, event):
+    def accounting_navigation(self, event: Dict[str, Optional[Union[str, int]]]
+                              ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Prepare data to draw Accounting window.
 
         Return data only on first call, because View store them too.
@@ -101,7 +103,8 @@ class Model:
         else:
             return window, []
 
-    def accounting_update_row(self, event):
+    def accounting_update_row(self, event: Dict[str, Optional[Union[str, int]]]
+                              ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Update changed entry in database.
 
         If last row was modified, add new entries.
@@ -121,7 +124,8 @@ class Model:
             return window, result
         return window, []
 
-    def settings_navigation(self, event):
+    def settings_navigation(self, event: Dict[str, Optional[Union[str, int]]]
+                            ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Prepare data to draw Settings window.
 
         Return data only on first call, because View store them too.
@@ -137,14 +141,16 @@ class Model:
             return window, result
         return window, []
 
-    def process_event(self, event):
+    def process_event(self, event: Dict[str, Optional[Union[str, int]]]
+                      ) -> Tuple[str, Union[Iterable[Dict[str, Union[int, float, str]]],
+                                            Dict[str, str]]]:
         """Call event corresponding handler function.
 
         :param event: occurred event data.
         """
         return getattr(self, event["type"])(event)
 
-    def theme_setup(self, event):
+    def theme_setup(self, event: Dict[str, Optional[Union[str, int]]]) -> Tuple[str, Iterable]:
         """Navigate after theme was applied.
 
         :param event: occurred event data.
@@ -155,7 +161,8 @@ class Model:
         else:
             return self.settings_navigation(event)
 
-    def settings_update_row(self, event):
+    def settings_update_row(self, event: Dict[str, Optional[Union[str, int]]]
+                            ) -> Tuple[str, Iterable]:
         """Update changed setting in database.
 
         :param event: occurred event data.
