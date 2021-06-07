@@ -86,8 +86,8 @@ class Model:
     def accounting_navigation(self, event: Dict[str, Optional[Union[str, int]]]
                               ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Prepare data to draw Accounting window.
-
         Return data only on first call, because View store them too.
+
         :param event: occurred event data.
         """
         window = "window_accounting"
@@ -106,8 +106,8 @@ class Model:
     def accounting_update_row(self, event: Dict[str, Optional[Union[str, int]]]
                               ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Update changed entry in database.
-
         If last row was modified, add new entries.
+
         :param event: occurred event data.
         """
         window = "window_accounting"
@@ -127,8 +127,8 @@ class Model:
     def settings_navigation(self, event: Dict[str, Optional[Union[str, int]]]
                             ) -> Tuple[str, Iterable[Dict[str, Union[int, float, str]]]]:
         """Prepare data to draw Settings window.
-
         Return data only on first call, because View store them too.
+
         :param event: occurred event data.
         """
         window = "window_settings"

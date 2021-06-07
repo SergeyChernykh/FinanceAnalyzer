@@ -234,9 +234,9 @@ class View:
            *args,
            **kwargs) -> Union[tk.Frame, Tuple[tk.Frame, Dict[str, int]]]:
         """Create a widget, set up geometry and adjust master's column/row weights.
-
         Geometry string may (not) include any of the following fields:
         row+span.weight:row+column.weight/gravity
+
         :param cls: widget class
         :param master: master widget to embed
         :param geom: geometry string

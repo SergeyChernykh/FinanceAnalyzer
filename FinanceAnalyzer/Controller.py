@@ -9,8 +9,8 @@ class Controller:
 
     def __init__(self, title: str = "FinanceAnalyzer") -> None:
         """Create View and Model instances.
-
         Model and View communicate via callbacks.
+
         :param title: application title.
         """
         self.main_window = tk.Frame()

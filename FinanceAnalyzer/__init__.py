@@ -1,1 +1,1 @@
-"""Initialization code."""
+"""Simple finance manager application."""
