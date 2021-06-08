@@ -8,7 +8,8 @@ class Model:
     """MVC Model class."""
 
     def __init__(self, callback: Callable[[str, Optional[
-            Union[Iterable[Dict[str, Union[int, str, float]]], Dict[str, str]]]], None]) -> None:
+            Union[Iterable[Dict[str, Union[int, str, float]]], Dict[str, str]]]], None],
+            dbpath: str) -> None:
         """Open database.
 
         :param callback: callback passed by Controller.
@@ -17,7 +18,7 @@ class Model:
         self.windows = {"window_accounting", "window_settings"}
         self.settings_set = {"Background color", "Text color", "Font"}
         self.initial_call = {w: True for w in self.windows}
-        self.con = sqlite3.connect(os.path.expanduser("~/FinanceAnalyzer.db"))
+        self.con = sqlite3.connect(os.path.expanduser(dbpath))
         self.cur = self.con.cursor()
         self.num_records_start = 20
 

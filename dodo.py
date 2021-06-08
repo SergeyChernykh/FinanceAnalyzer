@@ -13,6 +13,13 @@ def task_html():
     }
 
 
+def task_test():
+    """Run tests."""
+    return {
+        "actions": ["python -m unittest"],
+    }
+
+
 def task_pot():
     """Re-create .pot ."""
     return {

@@ -7,7 +7,7 @@ from typing import Optional, Dict, Union, Iterable
 class Controller:
     """MVC Controller class."""
 
-    def __init__(self, title: str = "FinanceAnalyzer") -> None:
+    def __init__(self, title: str, dbpath: str = "~/FinanceAnalyzer.db") -> None:
         """Create View and Model instances.
         Model and View communicate via callbacks.
 
@@ -22,7 +22,7 @@ class Controller:
         self.main_window.rowconfigure(0, weight=1)
         self.main_window.grid(sticky="NEWS")
         self.view = View.View(self.main_window, self.pass_event_to_model)
-        self.model = Model.Model(self.draw_view)
+        self.model = Model.Model(self.draw_view, dbpath)
         self.window = "window_main"
 
     def __call__(self) -> None:
@@ -44,5 +44,5 @@ class Controller:
 
 def main():
     """Start application."""
-    controller = Controller(title="FinanceAnalyzer")
+    controller = Controller(title="FinanceAnalyzer", dbpath="~/FinanceAnalyzer.db")
     controller()
