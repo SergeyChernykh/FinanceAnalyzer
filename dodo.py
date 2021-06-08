@@ -40,3 +40,11 @@ def task_mo():
         "file_dep": ["po/ru/LC_MESSAGES/FinanceAnalyzer.po"],
         "targets": ["FinanceAnalyzer/ru/LC_MESSAGES/FinanceAnalyzer.mo"],
     }
+
+
+def task_wheel():
+    """Create binary wheel distribution."""
+    return {
+        'actions': ['python -m build -w'],
+        'task_dep': ['mo'],
+    }
