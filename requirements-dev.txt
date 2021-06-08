@@ -4,3 +4,6 @@ pydocstyle
 sphinx
 Babel
 doit
+build
+setuptools
+wheel
